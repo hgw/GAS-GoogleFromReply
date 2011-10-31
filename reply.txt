@@ -1,0 +1,57 @@
+/**
+ *
+ * チケット予約などを スプレッドシートで管理しつつ、ユーザに自動返信するやつ。
+ * auto reply email when an user submit from google form to spreadsheet.
+ *
+ *
+ * 以下のスクリプトをGドキュメントの ツール>スクリプトエディタ へコピペして使用する。
+ * イベントのトリガーは “From spreadsheet - On form submit” に設定。
+ */
+function responseFormSubmitted(e) {
+	try{
+		var OFFICE_MAIL = "xxx@gmail.com";	// (bcc) admin address 
+		var SENDER = "";	// sender name
+		var SUBJECT = "ご確認";	// subject
+
+		var timeStamp = e.values[0]; // form タイムスタンプ
+		var eventName = e.values[1]; // form のn番目
+		var numTicket = e.values[2];
+		var userName = e.values[3];
+		var userPhone = e.values[4];
+		var userEmail = e.values[5];
+		
+		var mailContent = userName + " 様 \n \n"+
+			"本メールは予約内容の確認のための自動返信メールです。\n"+
+			"以下の内容にてお申し込みを承りました。お申し込みありがとうございます。\n\n" +
+			"お名前 : "+userName+"\n"+
+			"お電話番号 : "+userPhone+"\n"+
+			"E-Mail : "+userEmail+"\n\n"+
+			"ご希望の公演 : "+eventName+"\n"+
+			"チケットの枚数 : "+numTicket+"\n"+
+			"内容を確認後に改めて、ご連絡致します。\n\n" +
+			SENDER;
+		
+		
+		// Invalid Address
+		if (!userEmail.match(/^[A-Za-z0-9]+[\w-]+@[\w\.-]+\.\w{2,}$/)){
+			
+			MailApp.sendEmail( 
+				OFFICE_MAIL, 
+				"E-Mailの記載のないチケット予約がありました。", 
+				"E-Mailの記載のないチケット予約がありました。\n\n------------------\n\n"+mailContent
+			);
+			
+			return;
+		}
+
+		MailApp.sendEmail(
+			userEmail,
+			SUBJECT,
+			mailContent,
+			{ name: SENDER, bcc:OFFICE_MAIL }
+		);
+
+	}catch(err){
+		MailApp.sendEmail(OFFICE_MAIL, "予約完了メールの送信に失敗しました", err.message);
+	}
+}
